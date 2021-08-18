@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:proyecto_chat/widgets/blue_boton.dart';
 
+import 'package:provider/provider.dart';
+import 'package:proyecto_chat/helpers/alert_dialog.dart';
+
+import 'package:proyecto_chat/services/auth_service.dart';
+import 'package:proyecto_chat/widgets/blue_boton.dart';
 import 'package:proyecto_chat/widgets/custom_input.dart';
 import 'package:proyecto_chat/widgets/labels.dart';
 import 'package:proyecto_chat/widgets/logo.dart';
@@ -49,6 +53,7 @@ class _FormLoginState extends State<_FormLogin> {
   final passCtrl = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthService>(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 50),
       child: Column(
@@ -68,10 +73,30 @@ class _FormLoginState extends State<_FormLogin> {
           ),
           BlueBoton(
             text: "Ingrese",
-            onPress: () {
-              print(emailCtrl.text);
-              print(passCtrl.text);
-            },
+            /* Si autenticando es true, el boton queda oscuro (en null), sino se habilita el boton.
+               Así se evita el doble post
+             */
+            onPress: auth.autenticando
+                ? null
+                : () async {
+                    // Quita el focus de donde esté y ocultará el teclado si está desplegado
+                    FocusScope.of(context).unfocus();
+                    final bool loginOk = await auth.login(
+                      emailCtrl.text.trim(),
+                      passCtrl.text.trim(),
+                    );
+                    if (loginOk) {
+                      //TODO: iniciar socket
+                      Navigator.of(context).pushReplacementNamed("usuarios");
+                    } else {
+                      //Mostrar alerta
+                      mostrarDialogo(
+                        context,
+                        "Login incorrecto",
+                        "Revise las credenciales",
+                      );
+                    }
+                  },
           ),
         ],
       ),

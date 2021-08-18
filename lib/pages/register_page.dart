@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:proyecto_chat/helpers/alert_dialog.dart';
+import 'package:proyecto_chat/services/auth_service.dart';
 import 'package:proyecto_chat/widgets/blue_boton.dart';
 
 import 'package:proyecto_chat/widgets/custom_input.dart';
@@ -50,6 +53,7 @@ class _FormLoginState extends State<_FormLogin> {
   final passCtrl = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthService>(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 50),
       child: Column(
@@ -75,10 +79,26 @@ class _FormLoginState extends State<_FormLogin> {
           ),
           BlueBoton(
             text: "Registrar",
-            onPress: () {
-              print(emailCtrl.text);
-              print(passCtrl.text);
-            },
+            onPress: auth.autenticando
+                ? null
+                : () async {
+                    print(nameCtrl.text);
+                    print(emailCtrl.text);
+                    print(passCtrl.text);
+
+                    dynamic registerOk = await auth.register(
+                      nameCtrl.text.trim(),
+                      emailCtrl.text.trim(),
+                      passCtrl.text.trim(),
+                    );
+
+                    if (registerOk == true) {
+                      //TODO: llamar a socket
+                      Navigator.of(context).pushReplacementNamed("usuarios");
+                    } else {
+                      mostrarDialogo(context, "Error de registro", registerOk);
+                    }
+                  },
           ),
         ],
       ),

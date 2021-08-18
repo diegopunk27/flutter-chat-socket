@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import 'package:proyecto_chat/models/usuario.dart';
+import 'package:proyecto_chat/services/auth_service.dart';
 
 class UsuariosPage extends StatefulWidget {
   @override
@@ -14,27 +16,39 @@ class _UsuariosPageState extends State<UsuariosPage> {
       RefreshController(initialRefresh: false);
   final List<Usuario> usuarios = [
     Usuario(nombre: 'Diego', email: 'diego@hotmail', uid: '1', online: true),
-    Usuario(nombre: 'José', email: 'jose@hotmail', uid: '2'),
+    Usuario(nombre: 'José', email: 'jose@hotmail', uid: '2', online: false),
     Usuario(
         nombre: 'Rolando', email: 'rolando@hotmail', uid: '3', online: true),
-    Usuario(nombre: 'Luisina', email: 'luisi@hotmail', uid: '4'),
+    Usuario(nombre: 'Luisina', email: 'luisi@hotmail', uid: '4', online: false),
   ];
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthService>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Nombre de Usuario",
+          auth.usuario.nombre,
           style: TextStyle(color: Colors.lightBlue),
         ),
         elevation: 1,
+        centerTitle: true,
         backgroundColor: Colors.white,
         leading: IconButton(
           icon: Icon(
             Icons.exit_to_app,
             color: Colors.lightBlue,
           ),
-          onPressed: () {},
+          onPressed: () async {
+            //TODO: Deconectar socket
+            await auth.logOut();
+
+            /* Otra manera de hace logout 
+              AuthService.deleteToken();
+              En este caso no se necesita usar provider, porque al ser deleteToken un metodo estatico
+              no es necesario instanciar la clase  
+            */
+            Navigator.of(context).pushReplacementNamed('login');
+          },
         ),
         actions: <Widget>[
           Container(
