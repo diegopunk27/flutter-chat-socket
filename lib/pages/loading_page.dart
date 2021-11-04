@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:proyecto_chat/pages/usuario_page.dart';
 import 'package:proyecto_chat/services/auth_service.dart';
+import 'package:proyecto_chat/services/socket-service.dart';
 
 class LoadingPage extends StatelessWidget {
   @override
@@ -20,9 +21,12 @@ class LoadingPage extends StatelessWidget {
 
   Future loading(BuildContext context) async {
     final auth = Provider.of<AuthService>(context, listen: false);
+    final socket = Provider.of<SocketService>(context, listen: false);
     bool autenticado = await auth.isLoggedIn();
     if (autenticado) {
-      //TODO: Inicializar socket
+      // Inicializar socket
+      socket.connect();
+
       /* Se utiliza el "pushReplacement(PageRouteBuilder" para poder configurar los efectos
         de despliegue de la pantalla
        */

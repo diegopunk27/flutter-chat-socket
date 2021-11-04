@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:proyecto_chat/helpers/alert_dialog.dart';
 
 import 'package:proyecto_chat/services/auth_service.dart';
+import 'package:proyecto_chat/services/socket-service.dart';
 import 'package:proyecto_chat/widgets/blue_boton.dart';
 import 'package:proyecto_chat/widgets/custom_input.dart';
 import 'package:proyecto_chat/widgets/labels.dart';
@@ -54,6 +55,7 @@ class _FormLoginState extends State<_FormLogin> {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthService>(context);
+    final socket = Provider.of<SocketService>(context, listen: false);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 50),
       child: Column(
@@ -86,7 +88,8 @@ class _FormLoginState extends State<_FormLogin> {
                       passCtrl.text.trim(),
                     );
                     if (loginOk) {
-                      //TODO: iniciar socket
+                      //iniciar socket
+                      socket.connect();
                       Navigator.of(context).pushReplacementNamed("usuarios");
                     } else {
                       //Mostrar alerta

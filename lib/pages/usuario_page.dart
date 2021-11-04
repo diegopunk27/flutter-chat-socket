@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:proyecto_chat/services/chat_service.dart';
+import 'package:proyecto_chat/services/socket-service.dart';
 
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import 'package:proyecto_chat/models/usuario.dart';
 import 'package:proyecto_chat/services/auth_service.dart';
+import 'package:proyecto_chat/services/usuarios_service.dart';
 
 class UsuariosPage extends StatefulWidget {
   @override
@@ -14,16 +17,24 @@ class UsuariosPage extends StatefulWidget {
 class _UsuariosPageState extends State<UsuariosPage> {
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
-  final List<Usuario> usuarios = [
-    Usuario(nombre: 'Diego', email: 'diego@hotmail', uid: '1', online: true),
-    Usuario(nombre: 'José', email: 'jose@hotmail', uid: '2', online: false),
-    Usuario(
-        nombre: 'Rolando', email: 'rolando@hotmail', uid: '3', online: true),
-    Usuario(nombre: 'Luisina', email: 'luisi@hotmail', uid: '4', online: false),
-  ];
+  final usuariosService = new UsuariosService();
+  List<Usuario> usuarios = [];
+
+  @override
+  void initState() {
+    obtenerUsuarios();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthService>(context);
+    final socket = Provider.of<SocketService>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -39,7 +50,8 @@ class _UsuariosPageState extends State<UsuariosPage> {
             color: Colors.lightBlue,
           ),
           onPressed: () async {
-            //TODO: Deconectar socket
+            //Deconectar socket
+            socket.disconnect();
             await auth.logOut();
 
             /* Otra manera de hace logout 
@@ -53,10 +65,15 @@ class _UsuariosPageState extends State<UsuariosPage> {
         actions: <Widget>[
           Container(
             margin: EdgeInsets.only(right: 10),
-            child: Icon(
-              Icons.offline_bolt,
-              color: Colors.red,
-            ),
+            child: socket.serverStatus == ServerStatus.Online
+                ? Icon(
+                    Icons.check_circle,
+                    color: Colors.blue,
+                  )
+                : Icon(
+                    Icons.offline_bolt,
+                    color: Colors.red,
+                  ),
           ),
         ],
       ),
@@ -64,7 +81,7 @@ class _UsuariosPageState extends State<UsuariosPage> {
         child: usuarioListView(),
         controller: _refreshController,
         enablePullDown: true,
-        onRefresh: _onRefresh,
+        onRefresh: obtenerUsuarios,
         header: WaterDropHeader(
           //OPCION idleIcon: Icon(Icons.refresh),
           complete: Icon(
@@ -92,8 +109,9 @@ class _UsuariosPageState extends State<UsuariosPage> {
     );
   }
 
-  void _onRefresh() async {
-    await Future.delayed(Duration(seconds: 3));
+  obtenerUsuarios() async {
+    usuarios = await usuariosService.getUsuarios();
+    setState(() {});
     _refreshController.refreshCompleted();
   }
 }
@@ -121,6 +139,15 @@ class UsuarioListTile extends StatelessWidget {
       ),
       title: Text(usuario.nombre),
       subtitle: Text(usuario.email),
+      onTap: () {
+        /*Instancia la clase ChatService y almacena el usuario al que se hace tap en la propiedad usuarioPara
+          De esta manera se podra acceder a la informacion del usuario en la agina del chat.
+          NOTA: Otra opción era mandar el usuario como parametro en el Navigator, y evitar crear un provider
+        */
+        final usuarioService = Provider.of<ChatService>(context, listen: false);
+        usuarioService.usuarioPara = usuario;
+        Navigator.of(context).pushNamed("chat");
+      },
     );
   }
 }
